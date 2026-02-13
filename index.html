@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>À toi, mon éternel amour – Machou ❤️</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --or-chaleur: #f9e4b7;
+            --rouge-amour: #c02639;
+            --accent: #e84a5f;
+            --glass: rgba(20, 5, 5, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --shadow: rgba(0, 0, 0, 0.7);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            background: #0f0203;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden; /* Bloqué jusqu'à l'ouverture */
+            cursor: none; /* Curseur personnalisé */
+            position: relative;
+        }
+
+        /* --- Arrière-plan Vidéo & Canvas --- */
+        #bg-video {
+            position: fixed;
+            inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: -3;
+            opacity: 0.3;
+            filter: blur(3px) brightness(0.6);
+        }
+
+        canvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+
+        /* --- Curseur Personnalisé --- */
+        #cursor {
+            position: fixed; width: 30px; height: 30px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e84a5f" filter="drop-shadow(0px 0px 4px rgba(232,74,95,0.8))"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>') center / contain no-repeat;
+            pointer-events: none; z-index: 9999; transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+
+        /* --- L'Enveloppe (Introduction) --- */
+        #intro-layer {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s ease 0.5s, transform 1s ease 0.5s;
+        }
+
+        .envelope-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .envelope-container:hover { transform: scale(1.05); }
+
+        .envelope {
+            width: 320px; height: 220px;
+            background: #a01a2a;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        /* Le rabat (Flap) */
+        .flap {
+            position: absolute; top: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 120px solid #c92a40; /* Couleur plus claire */
+            transform-origin: top;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s;
+            z-index: 5;
+        }
+
+        .pocket {
+            position: absolute; bottom: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 160px solid #a01a2a;
+            border-right: 160px solid #8f1725;
+            border-bottom: 110px solid #b32236;
+            border-top: 110px solid transparent;
+            z-index: 3;
+        }
+
+        .heart-seal {
+            position: absolute; top: 80px; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px; color: var(--or-chaleur);
+            z-index: 10;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+
+        /* Animation d'ouverture */
+        .open-anim .flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+        .open-anim .heart-seal { opacity: 0; transition: 0.2s; }
+        .open-anim { pointer-events: none; }
+
+        .click-text {
+            margin-top: 40px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 2rem;
+            color: var(--or-chaleur);
+            opacity: 0.8;
+            animation: floatText 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.15); } }
+        @keyframes floatText { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* --- Contenu Principal --- */
+        .main-container {
+            display: flex; width: 100%; min-height: 100vh;
+            padding: 40px; gap: 40px; 
+            align-items: center; justify-content: center;
+            opacity: 0; 
+            transform: scale(0.95);
+            transition: opacity 1.5s ease 0.5s, transform 1.5s ease 0.5s;
+            pointer-events: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        .active-content { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+        /* --- Photos Style Polaroid --- */
+        .photo-column { 
+            width: 250px; 
+            display: flex; flex-direction: column; gap: 60px; 
+            perspective: 1000px;
+        }
+
+        .photo-card {
+            background: #fff;
+            padding: 12px 12px 40px 12px; /* Marge large en bas pour effet polaroid */
+            box-shadow: 5px 10px 20px rgba(0,0,0,0.5);
+            transform: rotate(var(--r));
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: float 6s ease-in-out infinite;
+            animation-delay: var(--d);
+            position: relative;
+        }
+
+        .photo-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(45deg, rgba(255,215,0,0.1), transparent);
+            pointer-events: none; mix-blend-mode: overlay;
+        }
+
+        .photo-card img { width: 100%; height: auto; display: block; filter: sepia(0.2) contrast(1.1); }
+
+        .photo-card:hover { 
+            transform: scale(1.15) rotate(0deg) !important; 
+            z-index: 100; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            animation-play-state: paused; 
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(var(--r)); }
+            50% { transform: translateY(-15px) rotate(var(--r)); }
+        }
+
+        /* --- Lettre Centrale --- */
+        .letter-container {
+            flex: 1; max-width: 650px;
+            background: var(--glass); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 60px; border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            text-align: center; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        .letter-container::before { /* Ornement haut */
+            content: "✦"; position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            color: var(--or-chaleur); font-size: 20px;
+        }
+
+        h1 { 
+            font-family: 'Great Vibes', cursive; 
+            font-size: 5rem; 
+            background: linear-gradient(to right, #f9e4b7, #e6c888, #f9e4b7);
+            -webkit-background-clip: text; color: transparent;
+            margin-bottom: 30px; 
+            text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .letter-content p { 
+            font-size: 1.25rem; line-height: 1.9; margin-bottom: 25px; 
+            color: #ececec; font-weight: 300; letter-spacing: 0.5px;
+        }
+        
+        .highlight { color: var(--accent); font-weight: bold; }
+
+        .signature {
+            font-family: 'Great Vibes', cursive; font-size: 3.8rem;
+            color: var(--or-chaleur); margin-top: 40px; display: block;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+        }
+
+        /* --- Lecteur Audio --- */
+        #music-container {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 100; width: 90%; max-width: 400px;
+            opacity: 0; transition: opacity 2s ease 1s;
+        }
+        
+        iframe {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.5);
+        }
+
+        /* --- Mobile Responsive --- */
+        @media (max-width: 1024px) {
+            #cursor { display: none; }
+            body { cursor: auto; overflow-y: auto; }
+            
+            .main-container { 
+                flex-direction: column; 
+                padding: 100px 20px 150px; /* Espace en bas pour le player */
+            }
+            
+            .photo-column { 
+                width: 100%; 
+                flex-direction: row; flex-wrap: wrap; justify-content: center; 
+                gap: 15px;
+            }
+            
+            .photo-card { 
+                width: 40%; max-width: 150px; 
+                padding: 5px 5px 25px 5px;
+            }
+            
+            h1 { font-size: 3.5rem; }
+            .letter-container { padding: 30px; }
+            .letter-content p { font-size: 1.1rem; }
+            
+            #intro-layer { background: #0f0203; /* Cache le fond pour perf mobile */ }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    
+    <canvas id="heartCanvas"></canvas>
+
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="m1.mp4" type="video/mp4">
+        <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=2070" style="width:100%; height:100%; object-fit:cover;" alt="fond">
+    </video>
+
+    <div id="intro-layer">
+        <div class="envelope-container" onclick="openLetter()">
+            <div class="envelope" id="envelope">
+                <div class="flap"></div>
+                <div class="pocket"></div>
+                <div class="heart-seal">❤️</div>
+            </div>
+        </div>
+        <p class="click-text">Une surprise t'attend...</p>
+    </div>
+
+    <div class="main-container" id="main-container">
+        
+        <div class="photo-column">
+            <div class="photo-card" style="--r: -6deg; --d: 0s;">
+                <img src="m2.jpeg" alt="Nous">
+            </div>
+            <div class="photo-card" style="--r: 4deg; --d: -2s;">
+                <img src="m3.jpeg" alt="Souvenir">
+            </div>
+            <div class="photo-card" style="--r: -3deg; --d: -4s;">
+                <img src="m4.jpeg" alt="Love">
+            </div>
+        </div>
+
+        <div class="letter-container">
+            <h1>Machou…</h1>
+            <div class="letter-content">
+                <p>Depuis le premier instant où mes yeux ont croisé les tiens, mon monde a changé de couleur. Tu es devenue cette <span class="highlight">lumière douce</span> qui apaise mes jours et enflamme mes nuits.</p>
+                <p>Ton sourire est ma mélodie préférée, et entendre ton rire est le plus beau des cadeaux. Chaque moment passé loin de toi me rappelle à quel point tu es essentielle à mon équilibre.</p>
+                <p>Merci d’être toi. Merci de m’aimer comme tu le fais. Je t’aime d’un amour immense, sincère et éternel. Aujourd’hui, demain, et pour tous les battements de cœur qui suivront.</p>
+            </div>
+            <span class="signature">Marc-Rosaire ❤️</span>
+        </div>
+
+        <div class="photo-column">
+            <div class="photo-card" style="--r: 5deg; --d: -1s;">
+                <img src="m7.jpeg" alt="Toi">
+            </div>
+            <div class="photo-card" style="--r: -4deg; --d: -3s;">
+                <img src="m8.jpeg" alt="Moi">
+            </div>
+            <div class="photo-card" style="--r: 2deg; --d: -5s;">
+                <img src="m9.jpeg" alt="Nous deux">
+            </div>
+        </div>
+    </div>
+
+    <div id="music-container">
+        <iframe src="https://www.aisongmaker.io/fr/music/7ba380e4-aa99-4711-807c-a8c2c7c30bb3" width="100%" height="100" style="border: none;" allow="autoplay; encrypted-media"></iframe>
+    </div>
+
+    <script>
+        // --- Gestion du Curseur ---
+        const cursor = document.getElementById('cursor');
+        
+        document.addEventListener('mousemove', e => {
+            // Petite optimisation pour centrer le curseur
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+        });
+
+        document.addEventListener('mousedown', () => cursor.style.transform += ' scale(0.8)');
+        document.addEventListener('mouseup', () => cursor.style.transform = cursor.style.transform.replace(' scale(0.8)', ''));
+
+        // --- Logique d'Ouverture ---
+        function openLetter() {
+            const envelopeContainer = document.querySelector('.envelope-container');
+            const introLayer = document.getElementById('intro-layer');
+            const mainContent = document.getElementById('main-container');
+            const musicBox = document.getElementById('music-container');
+
+            // 1. Ouvrir le rabat
+            envelopeContainer.classList.add('open-anim');
+
+            // 2. Attendre l'ouverture puis faire disparaître l'intro
+            setTimeout(() => {
+                introLayer.style.opacity = '0';
+                introLayer.style.transform = 'translateY(-50px) scale(0.9)';
+                
+                // On laisse l'utilisateur cliquer à travers l'intro invisible
+                setTimeout(() => {
+                    introLayer.style.display = 'none';
+                }, 1000);
+
+                // 3. Faire apparaître le contenu
+                mainContent.classList.add('active-content');
+                musicBox.style.opacity = '1';
+                document.body.style.overflowY = 'auto'; // Réactive le scroll
+                
+            }, 800);
+        }
+
+        // --- Animation Canvas (Vrais Cœurs) ---
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let hearts = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Heart {
+            constructor() {
+                this.reset(true);
+            }
+
+            reset(initial = false) {
+                this.x = Math.random() * width;
+                this.y = initial ? Math.random() * height : height + 20;
+                this.size = Math.random() * 10 + 5;
+                this.speed = Math.random() * 1 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.wobble = Math.random() * Math.PI * 2;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(Math.sin(this.wobble) * 0.1); // Légère rotation
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = '#e84a5f';
+                
+                // Dessin d'un coeur vectoriel
+                ctx.beginPath();
+                const s = this.size / 10; // échelle
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-5*s, -5*s, -10*s, 0, 0, 10*s);
+                ctx.bezierCurveTo(10*s, 0, 5*s, -5*s, 0, 0);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+
+            update() {
+                this.y -= this.speed;
+                this.wobble += 0.02;
+                this.x += Math.sin(this.wobble) * 0.5; // Mouvement de gauche à droite
+
+                if (this.y < -50) this.reset();
+            }
+        }
+
+        // Créer 40 cœurs
+        for(let i=0; i<40; i++) hearts.push(new Heart());
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            hearts.forEach(h => {
+                h.update();
+                h.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
